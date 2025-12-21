@@ -18,7 +18,7 @@ namespace Application.Dtos.Student
         public string Email { get; set; }
         public string PhoneNumber { get; set; }
         public string Password { get; set; }
-        public DateOnly Birthdate { get; set; }
+        public DateTime Birthdate { get; set; }
 
     }
 }

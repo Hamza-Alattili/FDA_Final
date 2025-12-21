@@ -10,10 +10,10 @@ namespace Application.Dtos.Course
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public int Price { get; set; }
-        public DateOnly StartCourse { get; set; }
-        public DateOnly EndCourse { get; set; }
+        public DateTime StartCourse { get; set; }
+        public DateTime EndCourse { get; set; }
         public string Category { get; set; }
-        public DateOnly CourseStarted { get; set; }
+        public DateTime CourseStarted { get; set; }
 
     }
 }

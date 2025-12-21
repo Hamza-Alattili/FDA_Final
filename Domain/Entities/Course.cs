@@ -10,8 +10,8 @@ namespace Domain.Entities
         public string CourseTitle { get; set; }
         public string CourseDescription { get; set; }
         public int Price { get; set; }
-        public DateOnly StartDate { get; set; }
-        public DateOnly EndDate { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
         public int CategoryId { get; set; }
         public CategoryTypes category { get; set; }
         public ICollection<Student> students { get; set; }

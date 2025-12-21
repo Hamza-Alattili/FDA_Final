@@ -23,7 +23,7 @@ namespace Application.Services
         }
         public async Task<EnrollmentDto> EnrollStudentAsync(int userId, int courseId)
         {
-            var student = await _studentRepo.GetAll()
+            var student = await _studentRepo.GetAll().Include(x => x.User)
         .FirstOrDefaultAsync(s => s.UserId == userId);
 
 
@@ -42,14 +42,14 @@ namespace Application.Services
                 return new EnrollmentDto
                 {
                     StudentId = student.Id,
-                    StudentName = student.FullName,
+                    StudentName = student.User.FullName,
                     CourseId = courseId,
                     CourseTitle = course.CourseTitle,
                     EnrollmentDate = existingEnrollment.EnrollmentDate
                 };
             }
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateTime.UtcNow;
 
             if (course.EndDate < today)
                 throw new Exception("Cannot enroll, course has already ended.");
@@ -69,7 +69,7 @@ namespace Application.Services
             return new EnrollmentDto
             {
                 StudentId = student.Id,
-                StudentName = student.FullName,
+                StudentName = student.User.FullName,
                 CourseId = courseId,
                 CourseTitle = course.CourseTitle,
                 EnrollmentDate = enrollment.EnrollmentDate
@@ -93,7 +93,7 @@ namespace Application.Services
             return new StudentCoursesDto
             {
                 StudentId = student.Id,
-                StudentName = student.FullName,
+                StudentName = student.User.FullName,
                 Courses = courses
             };
         }
@@ -106,8 +106,8 @@ namespace Application.Services
 
             var students = await _enrollmentRepo.GetAll()
                 .Where(e => e.CourseId == courseId)
-                .Include(e => e.Student)
-                .Select(e => e.Student.FullName)
+                .Include(e => e.Student).ThenInclude(x => x.User)
+                .Select(e => e.Student.User.FullName)
                 .ToListAsync();
 
             return new CourseStudentsDto

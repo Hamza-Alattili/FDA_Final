@@ -12,8 +12,8 @@ namespace Application.Dtos.Course
         public string Title { get; set; }
         public string Description { get; set; }
         public decimal Price { get; set; }
-        public DateOnly StartDate { get; set; }
-        public DateOnly EndDate { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
         
 
     }

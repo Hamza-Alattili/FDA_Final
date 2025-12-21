@@ -161,7 +161,7 @@ namespace Application.Services
             await _userRepo.SaveChanges();
         }
 
-        public async Task ChangePassword(int studentId, string newPassword)
+        public async Task ChangePassword(int userId, string newPassword)
         {
             var roleClaim = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Role);
             if (roleClaim != "Admin")
@@ -169,16 +169,16 @@ namespace Application.Services
                 throw new UnauthorizedAccessException("Only admin can change student password.");
             }
 
-            var student = await _studentRepo.GetById(studentId);
-            if (student == null)
+            var user = await _userRepo.GetById(userId);
+            if (user == null)
             {
-                throw new KeyNotFoundException("Student not found.");
+                throw new KeyNotFoundException("user not found.");
             }
-            var passwordHasher = new PasswordHasher<Student>();
-            student.Password = passwordHasher.HashPassword(student, newPassword);
+            var passwordHasher = new PasswordHasher<User>();
+            user.Password = passwordHasher.HashPassword(user, newPassword);
 
-            _studentRepo.Update(student);
-            await _studentRepo.SaveChanges();
+            _userRepo.Update(user);
+            await _userRepo.SaveChanges();
         }
 
     }

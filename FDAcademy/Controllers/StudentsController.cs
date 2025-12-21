@@ -26,10 +26,10 @@ namespace FDAcademy.Controllers
             return Ok("Student registered successfully");
         }
         [Authorize(Roles = FDAConst.STUDENT_ROLE)]
-        [HttpPost("StudentUpdate/{id}")]
-        public async Task<IActionResult> StudentUpdate(int id, [FromBody] StudentUpdateDto student)
+        [HttpPost("StudentUpdate")]
+        public async Task<IActionResult> UpdateMyAccount([FromBody] StudentUpdateDto student)
         {
-            await _studentService.StudentUpdate(id, student);
+            await _studentService.StudentUpdate(student);
             return Ok("Student updated successfully");
         }
         [Authorize(Roles = FDAConst.ADMIN_ROLE)]

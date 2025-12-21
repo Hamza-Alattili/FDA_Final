@@ -12,7 +12,7 @@ namespace Application.Dtos.Enrollment
         public string StudentName { get; set; }
         public int CourseId { get; set; }
         public string CourseTitle { get; set; }
-        public DateOnly EnrollmentDate { get; set; }
+        public DateTime EnrollmentDate { get; set; }
 
     }
 }

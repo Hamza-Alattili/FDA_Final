@@ -71,66 +71,61 @@ namespace Application.Services
             {
                 UserId = userObj.Id,
                 BirthDate = student.Birthdate,
-                University = student.University,
-                Password = userObj.Password
+                University = student.University
             });
             await _studentRepo.SaveChanges();
-
-
         }
-        public async Task StudentUpdate(int Id, StudentUpdateDto student)
+        public async Task StudentUpdate(StudentUpdateDto student)
         {
-            var students = await _userRepo.GetById(Id);
-            if (students == null)
-            {
-                throw new Exception("Student not found");
-            }
-            if (students.Role.Code == RoleEnum.Admin)
-            {
-                throw new UnauthorizedAccessException("Students cannot edit admin data");
-            }
             var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (currentUserId != Id.ToString())
+            var studentUser = await _userRepo.GetById(Convert.ToInt32(currentUserId));
+            if (studentUser == null)
             {
-                throw new UnauthorizedAccessException("You can only edit your own data");
+                throw new Exception("User not found");
             }
 
-            students.Name = student.FullName;
-            students.BirthDate = student.BirthDate;
-            students.University = student.University;
-            students.Email = student.Email;
-            students.PhoneNumber = student.PhoneNumber;
+            var studentObj = await _studentRepo.GetAll().FirstOrDefaultAsync(x => x.UserId == Convert.ToInt32(currentUserId));
+            if (studentObj == null)
+            {
+                throw new Exception("User not found");
+            }
 
+            studentUser.Name = student.FullName;
+            studentUser.Email = student.Email;
+            studentUser.PhoneNumber = student.PhoneNumber;
 
+            studentObj.BirthDate = student.BirthDate;
+            studentObj.University = student.University;
 
-            _userRepo.Update(students);
+            _userRepo.Update(studentUser);
+            _studentRepo.Update(studentObj);
             await _userRepo.SaveChanges();
         }
 
 
         public async Task<StudentListDto> GetStudentById(int Id)
         {
-            var student = await _userRepo.GetById(Id);
+            var student = await _studentRepo.GetAll().Include(x => x.User).FirstOrDefaultAsync();
 
             return student == null ? null : new StudentListDto
             {
                 StudentId = student.Id,
-                FullName = student.FullName,
-                Email = student.Email,
-                PhoneNumber = student.PhoneNumber,
+                FullName = student.User.FullName,
+                Email = student.User.Email,
+                PhoneNumber = student.User.PhoneNumber,
                 BirthDate = student.BirthDate
             };
         }
 
-        public Task<List<StudentListDto>> GetStudentList()
+        public async Task<List<StudentListDto>> GetStudentList()
         {
-            var students = _studentRepo.GetAll().Select
+            var students = await _studentRepo.GetAll().Include(x => x.User).Select
                 (students => new StudentListDto
                 {
                     StudentId = students.Id,
-                    FullName = students.FullName,
-                    Email = students.Email,
-                    PhoneNumber = students.PhoneNumber,
+                    FullName = students.User.FullName,
+                    Email = students.User.Email,
+                    PhoneNumber = students.User.PhoneNumber,
                     BirthDate = students.BirthDate,
                 }
                 ).ToListAsync();
@@ -143,32 +138,32 @@ namespace Application.Services
             if (httpContext == null || httpContext.User == null)
                 throw new Exception("No HttpContext or User found.");
 
-            var studentIdClaim = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(studentIdClaim))
-                throw new Exception("No studentId claim found in token.");
+            var userIdClaim = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim))
+                throw new Exception("No userId claim found in token.");
 
-            if (!int.TryParse(studentIdClaim, out var stuId))
-                throw new Exception("Invalid studentId claim.");
+            if (!int.TryParse(userIdClaim, out var stuId))
+                throw new Exception("Invalid userId claim.");
 
-            var student = await _studentRepo.GetById(stuId);
-            if (student == null)
-                throw new Exception("Student not found.");
+            var user = await _userRepo.GetById(stuId);
+            if (user == null)
+                throw new Exception("user not found.");
 
-            if (string.IsNullOrEmpty(student.Password))
-                throw new Exception("Student password is not set.");
+            if (string.IsNullOrEmpty(user.Password))
+                throw new Exception("user password is not set.");
 
-            var passwordHasher = new PasswordHasher<Student>();
-            var passwordResult = passwordHasher.VerifyHashedPassword(student, student.Password, input.OldPassword);
+            var passwordHasher = new PasswordHasher<User>();
+            var passwordResult = passwordHasher.VerifyHashedPassword(user, user.Password, input.OldPassword);
 
-            if (passwordResult != PasswordVerificationResult.Success)
+            if (passwordResult == PasswordVerificationResult.Failed)
                 throw new Exception("Old password is incorrect.");
 
-           
 
-            student.Password = passwordHasher.HashPassword(student, input.NewPassword);
 
-            _studentRepo.Update(student);
-            await _studentRepo.SaveChanges();
+            user.Password = passwordHasher.HashPassword(user, input.NewPassword);
+
+            _userRepo.Update(user);
+            await _userRepo.SaveChanges();
 
         }
 

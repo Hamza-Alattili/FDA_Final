@@ -1,5 +1,4 @@
-﻿using Domain.Entities.Enum;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Domain.Entities
@@ -26,7 +25,7 @@ namespace Domain.Entities
         public Role Role { get; set; }
         [Required]
         public string FullName { get; set; }
-        public DateOnly BirthDate { get; set; }
+        public DateTime BirthDate { get; set; }
         public string? University { get; set; }
     }
 }

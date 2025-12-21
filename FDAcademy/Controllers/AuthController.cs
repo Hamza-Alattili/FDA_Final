@@ -44,10 +44,10 @@ namespace FDAcademy.Controllers
             return Ok("Password has been reset successfully");
         }
         [Authorize(Roles = FDAConst.ADMIN_ROLE)]
-        [HttpPost("ChangePassword/{studentId}")]
-        public async Task<IActionResult> ChangePassword(int studentId, [FromBody] ChangePasswordDto input)
+        [HttpPost("ChangePassword/{userId}")]
+        public async Task<IActionResult> ChangePassword(int userId, [FromBody] ChangePasswordDto input)
         {
-            await _authService.ChangePassword(studentId, input.NewPassword);
+            await _authService.ChangePassword(userId, input.NewPassword);
             return Ok("Password changed successfully.");
 
         }
