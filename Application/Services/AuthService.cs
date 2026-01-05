@@ -1,7 +1,9 @@
 ﻿using Application.Dtos.Auth;
 using Application.Repositories.Interface;
 using Application.Services.Interfaces;
+using Domain;
 using Domain.Entities;
+using Domain.Entities.Enum;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +44,7 @@ namespace Application.Services
         {
             var user = await _userRepo.GetAll()
                 .Include(x => x.Role)
-                .FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == input.Email.Trim().ToLower());
+                .FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == input.Username.Trim().ToLower() || u.PhoneNumber.Trim() == input.Username.Trim());
 
             if (user == null)
             {
@@ -95,13 +97,12 @@ namespace Application.Services
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.Name),
-
             };
             var student = _studentRepo.GetAll().FirstOrDefault(s => s.UserId == user.Id);
 
             if (student != null)
             {
-                claims.Add(new Claim("studentId", student.Id.ToString())); 
+                claims.Add(new Claim("StudentId", student.Id.ToString())); 
             }
 
 
@@ -157,26 +158,6 @@ namespace Application.Services
             }
 
             user.Password = passwordHasher.HashPassword(user, input.NewPassword);
-            _userRepo.Update(user);
-            await _userRepo.SaveChanges();
-        }
-
-        public async Task ChangePassword(int userId, string newPassword)
-        {
-            var roleClaim = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Role);
-            if (roleClaim != "Admin")
-            {
-                throw new UnauthorizedAccessException("Only admin can change student password.");
-            }
-
-            var user = await _userRepo.GetById(userId);
-            if (user == null)
-            {
-                throw new KeyNotFoundException("user not found.");
-            }
-            var passwordHasher = new PasswordHasher<User>();
-            user.Password = passwordHasher.HashPassword(user, newPassword);
-
             _userRepo.Update(user);
             await _userRepo.SaveChanges();
         }

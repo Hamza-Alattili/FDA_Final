@@ -8,7 +8,11 @@ namespace Application.Services.Interfaces
         Task CreateCourse(CreateCourseDto course);
         Task UpdateCourse(int Id,CourseUpdeteDto course);
         Task DeleteCourse(int id);
-        Task<List<CourseFilterDto>> GetCourse(int id,CourseFilterDto filter);
+        Task<List<CoursesDataTable>> GetCoursesForAdmin(CourseFilterDto filter);
         Task<CourseListDto> GetCourseById(int id);
+        Task<List<CoursesDataTable>> GetMyCourses(CourseFilterDto filter);
+        Task<List<CoursesDataTable>> GetCourses(CourseFilterDto filter);
+        Task<List<CategoryList>> GetCategories();
+        Task<List<CoursesDataTable>> GetCoursesByStudentId(UserCoursesFilterDto filter);
     }
 }

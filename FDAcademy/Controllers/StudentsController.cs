@@ -1,5 +1,6 @@
 ﻿using Application.Dtos.Auth;
 using Application.Dtos.Student;
+using Application.Services;
 using Application.Services.Interfaces;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
@@ -26,35 +27,37 @@ namespace FDAcademy.Controllers
             return Ok("Student registered successfully");
         }
         [Authorize(Roles = FDAConst.STUDENT_ROLE)]
-        [HttpPost("StudentUpdate")]
+        [HttpPost("UpdateMyAccount")]
         public async Task<IActionResult> UpdateMyAccount([FromBody] StudentUpdateDto student)
         {
-            await _studentService.StudentUpdate(student);
+            await _studentService.UpdateMyAccount(student);
             return Ok("Student updated successfully");
         }
-        [Authorize(Roles = FDAConst.ADMIN_ROLE)]
-        [HttpGet("GetStudentById/{id}")]
-        public async Task<IActionResult> GetStudentById(int id)
+        [Authorize(Roles = FDAConst.STUDENT_ROLE)]
+        [HttpGet("GetCurrentStudent")]
+        public async Task<IActionResult> GetCurrentStudent()
         {
-            var student = await _studentService.GetStudentById(id);
+            var student = await _studentService.GetCurrentStudent();
             if (student == null) return NotFound("Student not found");
             return Ok(student);
 
         }
         [Authorize(Roles = FDAConst.ADMIN_ROLE)]
-        [HttpGet("GetStudentList")]
-        public async Task<ActionResult<List<StudentListDto>>> GetList()
+        [HttpPost("GetStudentList")]
+        public async Task<ActionResult<List<StudentListDto>>> GetList([FromBody] StudentFilterDto filter)
         {
-            var students = await _studentService.GetStudentList();
+            var students = await _studentService.GetStudentList(filter);
             return Ok(students);
         }
-        [Authorize(Roles = FDAConst.STUDENT_ROLE)]
-        [HttpPost("ResetPassword")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPassword)
+        [Authorize(Roles = FDAConst.ADMIN_ROLE)]
+        [HttpPost("ChangePassword/{userId}")]
+        public async Task<IActionResult> ChangePassword(int userId, [FromBody] ChangePasswordDto input)
         {
-            await _studentService.ResetPassword(resetPassword);
-            return Ok("Password reset successfully");
+            await _studentService.ChangePassword(userId, input.NewPassword);
+            return Ok("Password changed successfully.");
+
         }
+
         [Authorize(Roles = FDAConst.ADMIN_ROLE)]
         [HttpDelete("DeleteStudent/{id}")]
         public async Task<IActionResult> DeleteStudent(int id)

@@ -8,13 +8,13 @@ namespace Infrastructure.Data
     {
         public static void Seed(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<CategoryTypes>().HasData
+            modelBuilder.Entity<Category>().HasData
              (
-               new CategoryTypes { Id = 1, Name = "InformationTechnology",Code=(int)CategoryEnum.InformationTechnology },
-               new CategoryTypes { Id = 2, Name = "FullstackDev",Code=(int)CategoryEnum.FullstackDev },
-               new CategoryTypes { Id = 3, Name = "Sales",Code=(int)CategoryEnum.Sales },
-               new CategoryTypes { Id = 4, Name = "HumanResources",Code=(int)CategoryEnum.HumanResources },
-               new CategoryTypes { Id = 5, Name = "Marketing" ,Code = (int)CategoryEnum.Marketing}
+               new Category { Id = 1, Name = "InformationTechnology", Code = CategoryEnum.InformationTechnology },
+               new Category { Id = 2, Name = "FullstackDev", Code = CategoryEnum.FullstackDev },
+               new Category { Id = 3, Name = "Sales", Code = CategoryEnum.Sales },
+               new Category { Id = 4, Name = "HumanResources", Code = CategoryEnum.HumanResources },
+               new Category { Id = 5, Name = "Marketing", Code = CategoryEnum.Marketing }
 
              );
         }

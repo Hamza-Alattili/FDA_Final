@@ -10,8 +10,7 @@ namespace Application.Dtos.Student
     public class StudentregistrationDto 
     {
         [Required]
-        public string FullName { get; set; }
-        public string University{ get; set; }
+        public string Name { get; set; }
         [Required]
         [MaxLength(200)]
         [EmailAddress]
@@ -19,6 +18,7 @@ namespace Application.Dtos.Student
         public string PhoneNumber { get; set; }
         public string Password { get; set; }
         public DateTime Birthdate { get; set; }
+        public string University { get; set; }
 
     }
 }

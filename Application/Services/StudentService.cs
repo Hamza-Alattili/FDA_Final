@@ -17,14 +17,14 @@ namespace Application.Services
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IGenericRepository<User> _userRepo;
         private readonly IGenericRepository<Role> _roleRepo;
-        private readonly IGenericRepository<Course> _courseRepo;
+        private readonly IGenericRepository<Enrollment> _enrollmentRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public StudentService(IGenericRepository<Student> studentRepo, IGenericRepository<User> userRepo, IGenericRepository<Role> roleRepo, IGenericRepository<Course> courseRepo, IHttpContextAccessor httpContextAccessor)
+        public StudentService(IGenericRepository<Student> studentRepo, IGenericRepository<User> userRepo, IGenericRepository<Role> roleRepo, IGenericRepository<Enrollment> enrollmentRepo, IHttpContextAccessor httpContextAccessor)
         {
             _studentRepo = studentRepo;
             _userRepo = userRepo;
             _roleRepo = roleRepo;
-            _courseRepo = courseRepo;
+            _enrollmentRepo = enrollmentRepo;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -55,8 +55,7 @@ namespace Application.Services
               .FirstOrDefaultAsync(s => s.Code == RoleEnum.Student))?.Id;
 
             var userObj = new User();
-            userObj.Name = student.FullName;
-            userObj.FullName = student.FullName;
+            userObj.Name = student.Name;
             userObj.Email = student.Email;
             userObj.PhoneNumber = student.PhoneNumber;
             userObj.RoleId = studentRoleId.Value;
@@ -75,7 +74,7 @@ namespace Application.Services
             });
             await _studentRepo.SaveChanges();
         }
-        public async Task StudentUpdate(StudentUpdateDto student)
+        public async Task UpdateMyAccount(StudentUpdateDto student)
         {
             var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var studentUser = await _userRepo.GetById(Convert.ToInt32(currentUserId));
@@ -103,71 +102,77 @@ namespace Application.Services
         }
 
 
-        public async Task<StudentListDto> GetStudentById(int Id)
+        public async Task<StudentListDto> GetCurrentStudent()
         {
-            var student = await _studentRepo.GetAll().Include(x => x.User).FirstOrDefaultAsync();
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var student = await _studentRepo.GetAll()
+                .Include(x => x.User)
+                .FirstOrDefaultAsync(x => x.UserId == Convert.ToInt32(userId));
 
             return student == null ? null : new StudentListDto
             {
                 StudentId = student.Id,
-                FullName = student.User.FullName,
-                Email = student.User.Email,
-                PhoneNumber = student.User.PhoneNumber,
-                BirthDate = student.BirthDate
+                BirthDate = student.BirthDate,
+                University = student.University,
+                User = new UserListDto
+                {
+                    UserId = student.UserId,
+                    Name = student.User.Name,
+                    Email = student.User.Email,
+                    PhoneNumber = student.User.PhoneNumber,
+                }
             };
         }
 
-        public async Task<List<StudentListDto>> GetStudentList()
+        public async Task<List<StudentListDto>> GetStudentList(StudentFilterDto filter)
         {
-            var students = await _studentRepo.GetAll().Include(x => x.User).Select
-                (students => new StudentListDto
+            var students = _studentRepo.GetAll()
+                .Include(x => x.User)
+                .Where(student => (filter.BirthDate.HasValue ? student.BirthDate.Date == filter.BirthDate.Value.Date : true) &&
+                (!string.IsNullOrEmpty(filter.Name) ? student.User.Name.Trim().ToLower().Contains(filter.Name.Trim().ToLower()) : true) &&
+                (!string.IsNullOrEmpty(filter.Email) ? student.User.Email.Trim().ToLower().Contains(filter.Email.Trim().ToLower()) : true) &&
+                (!string.IsNullOrEmpty(filter.University) ? student.University.Trim().ToLower().Contains(filter.University.Trim().ToLower()) : true) &&
+                (!string.IsNullOrEmpty(filter.PhoneNumber) ? student.User.PhoneNumber.Trim().Contains(filter.PhoneNumber.Trim()) : true)
+                ).AsQueryable();
+
+              var studentResult = await students.Select
+                (student => new StudentListDto
                 {
-                    StudentId = students.Id,
-                    FullName = students.User.FullName,
-                    Email = students.User.Email,
-                    PhoneNumber = students.User.PhoneNumber,
-                    BirthDate = students.BirthDate,
+                    StudentId = student.Id,
+                    BirthDate = student.BirthDate,
+                    University = student.University,
+                    User = new UserListDto
+                    {
+                        UserId = student.UserId,
+                        Name = student.User.Name,
+                        Email = student.User.Email,
+                        PhoneNumber = student.User.PhoneNumber,
+                    }
                 }
                 ).ToListAsync();
-            return students;
+
+            return studentResult;
         }
 
-        public async Task ResetPassword(ResetPasswordDto input)
+        public async Task ChangePassword(int userId, string newPassword)
         {
-            var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext == null || httpContext.User == null)
-                throw new Exception("No HttpContext or User found.");
-
-            var userIdClaim = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim))
-                throw new Exception("No userId claim found in token.");
-
-            if (!int.TryParse(userIdClaim, out var stuId))
-                throw new Exception("Invalid userId claim.");
-
-            var user = await _userRepo.GetById(stuId);
+            var user = await _userRepo.GetById(userId);
             if (user == null)
-                throw new Exception("user not found.");
-
-            if (string.IsNullOrEmpty(user.Password))
-                throw new Exception("user password is not set.");
+            {
+                throw new KeyNotFoundException("user not found.");
+            }
+            else if (user.Role.Code == RoleEnum.Admin)
+            {
+                throw new Exception("Cannt change admin password.");
+            }
 
             var passwordHasher = new PasswordHasher<User>();
-            var passwordResult = passwordHasher.VerifyHashedPassword(user, user.Password, input.OldPassword);
-
-            if (passwordResult == PasswordVerificationResult.Failed)
-                throw new Exception("Old password is incorrect.");
-
-
-
-            user.Password = passwordHasher.HashPassword(user, input.NewPassword);
+            user.Password = passwordHasher.HashPassword(user, newPassword);
 
             _userRepo.Update(user);
             await _userRepo.SaveChanges();
-
         }
-
-
 
         public async Task DeleteStudent(int Id)
         {
@@ -176,7 +181,18 @@ namespace Application.Services
             {
                 throw new Exception("Student not found");
             }
+
+            var isEnrollmentExist = await _enrollmentRepo.GetAll()
+                .AnyAsync(c => c.StudentId == Id);
+
+            if (isEnrollmentExist)
+            {
+                throw new Exception("Cannt delete this student");
+            }
+
+            var user = await _userRepo.GetById(student.UserId);
             await _studentRepo.Delete(student);
+            await _userRepo.Delete(user);
             await _studentRepo.SaveChanges();
         }
     }

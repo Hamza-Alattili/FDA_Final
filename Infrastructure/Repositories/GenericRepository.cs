@@ -32,11 +32,11 @@ namespace Infrastructure.Repositories
         }
         public async Task Delete(T entity)
         {
-           _fDADbContext.Set<T>().Remove(entity);
+            _fDADbContext.Set<T>().Remove(entity);
         }
         public async Task<int> SaveChanges()
         {
-           return await _fDADbContext.SaveChangesAsync();
+            return await _fDADbContext.SaveChangesAsync();
         }
 
         public async Task DeleteRange(List<T> entity)

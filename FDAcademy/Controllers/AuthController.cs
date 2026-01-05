@@ -27,6 +27,7 @@ namespace FDAcademy.Controllers
             {
                 return Unauthorized("Invalid email or password");
             }
+
             return Ok(response);
         }
         [Authorize]
@@ -36,21 +37,13 @@ namespace FDAcademy.Controllers
             var accessToken = await _authService.RefreshToken(refreshToken);
             return Ok(accessToken);
         }
-        [Authorize(Roles = FDAConst.STUDENT_ROLE)]
+
+        [Authorize]
         [HttpPost("ResetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto input)
         {
             await _authService.ResetPassword(input);
             return Ok("Password has been reset successfully");
         }
-        [Authorize(Roles = FDAConst.ADMIN_ROLE)]
-        [HttpPost("ChangePassword/{userId}")]
-        public async Task<IActionResult> ChangePassword(int userId, [FromBody] ChangePasswordDto input)
-        {
-            await _authService.ChangePassword(userId, input.NewPassword);
-            return Ok("Password changed successfully.");
-
-        }
-
     }
 }

@@ -24,8 +24,7 @@ namespace Application.Services
         public async Task<EnrollmentDto> EnrollStudentAsync(int userId, int courseId)
         {
             var student = await _studentRepo.GetAll().Include(x => x.User)
-        .FirstOrDefaultAsync(s => s.UserId == userId);
-
+                .FirstOrDefaultAsync(s => s.UserId == userId);
 
             if (student == null)
                 throw new Exception("Student not found.");
@@ -35,86 +34,32 @@ namespace Application.Services
                 throw new Exception("Course not found.");
 
             var existingEnrollment = await _enrollmentRepo.GetAll()
-                .FirstOrDefaultAsync(e => e.StudentId == student.Id && e.CourseId == courseId);
+                .AnyAsync(e => e.StudentId == student.Id && e.CourseId == courseId);
 
-            if (existingEnrollment != null)
+            if (!existingEnrollment)
             {
-                return new EnrollmentDto
+                var enrollment = new Enrollment
                 {
                     StudentId = student.Id,
-                    StudentName = student.User.FullName,
                     CourseId = courseId,
-                    CourseTitle = course.CourseTitle,
-                    EnrollmentDate = existingEnrollment.EnrollmentDate
+                    EnrollmentDate = DateTime.UtcNow
                 };
+
+                await _enrollmentRepo.Insert(enrollment);
+                await _enrollmentRepo.SaveChanges();
             }
-
-            var today = DateTime.UtcNow;
-
-            if (course.EndDate < today)
-                throw new Exception("Cannot enroll, course has already ended.");
-
-            if (course.StartDate > today)
-                throw new Exception("Cannot enroll, course has not started yet.");
-            var enrollment = new Enrollment
+            else
             {
-                StudentId = student.Id,
-                CourseId = courseId,
-                EnrollmentDate = today
-            };
-
-            await _enrollmentRepo.Insert(enrollment);
-            await _enrollmentRepo.SaveChanges();
+                throw new Exception("Student is already enrolled in this course.");
+            }
 
             return new EnrollmentDto
             {
                 StudentId = student.Id,
-                StudentName = student.User.FullName,
+                StudentName = student.User.Name,
                 CourseId = courseId,
-                CourseTitle = course.CourseTitle,
-                EnrollmentDate = enrollment.EnrollmentDate
-            };
-        }
-        public async Task<StudentCoursesDto> GetEnrolByStu(int userId)
-        {
-            var student = await _studentRepo.GetAll()
-                .FirstOrDefaultAsync(s => s.UserId == userId);
-
-
-            if (student == null)
-                throw new Exception("Student not found.");
-
-            var courses = await _enrollmentRepo.GetAll()
-                .Where(e => e.StudentId == student.Id)
-                .Include(e => e.Course)
-                .Select(e => e.Course.CourseTitle)
-                .ToListAsync();
-
-            return new StudentCoursesDto
-            {
-                StudentId = student.Id,
-                StudentName = student.User.FullName,
-                Courses = courses
-            };
-        }
-
-        public async Task<CourseStudentsDto> GetEnrolByCor(int courseId)
-        {
-            var course = await _courseRepo.GetById(courseId);
-            if (course == null)
-                throw new Exception("Course not found.");
-
-            var students = await _enrollmentRepo.GetAll()
-                .Where(e => e.CourseId == courseId)
-                .Include(e => e.Student).ThenInclude(x => x.User)
-                .Select(e => e.Student.User.FullName)
-                .ToListAsync();
-
-            return new CourseStudentsDto
-            {
-                CourseId = courseId,
-                CourseTitle = course.CourseTitle,
-                Students = students
+                CourseTitle = course.Title,
+                EnrollmentDate = DateTime.UtcNow
             };
         }
     }

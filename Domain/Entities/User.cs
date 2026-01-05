@@ -23,9 +23,5 @@ namespace Domain.Entities
         public int RoleId { get; set; }
         [ForeignKey("RoleId")]
         public Role Role { get; set; }
-        [Required]
-        public string FullName { get; set; }
-        public DateTime BirthDate { get; set; }
-        public string? University { get; set; }
     }
 }

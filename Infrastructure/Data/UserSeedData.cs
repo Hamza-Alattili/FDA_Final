@@ -26,9 +26,8 @@ namespace Infrastructure.Data
 
                 var admin = new User
                 {
-                   
+
                     Name = "System Admin",
-                    FullName = "System Admin",
                     Email = "admin@fda.com",
                     PhoneNumber = "0797894562",
                     RoleId = adminRoleId

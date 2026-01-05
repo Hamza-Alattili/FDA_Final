@@ -7,12 +7,11 @@ namespace Application.Services.Interfaces
     public interface IStudentService
     {
         Task StudentReg(StudentregistrationDto student);
-        Task StudentUpdate(StudentUpdateDto student);
-        Task ResetPassword(ResetPasswordDto input);
-        Task<StudentListDto> GetStudentById(int Id);
-        Task<List<StudentListDto>> GetStudentList();
+        Task UpdateMyAccount(StudentUpdateDto student);
+        Task<StudentListDto> GetCurrentStudent();
+        Task<List<StudentListDto>> GetStudentList(StudentFilterDto filter);
         Task DeleteStudent(int Id);
-
+        Task ChangePassword(int userId, string newPassword);
 
     }
 }

@@ -76,6 +76,18 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(securityReq);
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy
+                .WithOrigins("*")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IStudentService), typeof(StudentService));
 builder.Services.AddScoped(typeof(IAuthService), typeof(AuthService));
@@ -89,13 +101,13 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseCors("AllowFrontend");
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<FDAcademyDbContext>();
     await UserSeedData.InitializeAsync(context);
 }
-
-
 
 
 app.UseSwagger();

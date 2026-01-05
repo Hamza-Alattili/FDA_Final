@@ -7,15 +7,13 @@ namespace Domain.Entities
         public int Id { get; set; }
         [Required]
         [MaxLength(100)]
-        public string CourseTitle { get; set; }
-        public string CourseDescription { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
         public int Price { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public int CategoryId { get; set; }
-        public CategoryTypes category { get; set; }
-        public ICollection<Student> students { get; set; }
-       // public DateTime CourseStarted { get; set; } = DateTime.Now;
+        public Category Category { get; set; }
         public ICollection<Enrollment> Enrollments { get; set; }
 
     }
