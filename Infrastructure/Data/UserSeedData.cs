@@ -29,7 +29,7 @@ namespace Infrastructure.Data
 
                     Name = "System Admin",
                     Email = "admin@fda.com",
-                    PhoneNumber = "0797894562",
+                    PhoneNumber = "0781505664",
                     RoleId = adminRoleId
                 };
                 admin.Password = passwordHasher.HashPassword(admin, "Admin@123");

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(FDAcademyDbContext))]
-    [Migration("20260104155502_init-db")]
-    partial class initdb
+    [Migration("20260215191359_Inti")]
+    partial class Inti
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
